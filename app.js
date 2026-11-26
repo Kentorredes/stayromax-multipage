@@ -1,32 +1,5 @@
 (() => {
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const loader = document.querySelector('.site-loader');
-  document.body.classList.add('is-loading');
-  const finishLoader = () => {
-    window.setTimeout(() => {
-      document.body.classList.remove('is-loading');
-      loader?.classList.add('is-complete');
-    }, reducedMotion ? 0 : 360);
-  };
-  if (document.readyState === 'complete') {
-    finishLoader();
-  } else {
-    window.addEventListener('load', finishLoader, { once: true });
-  }
-
-  const menuButton = document.querySelector('.menu');
-  const mobileMenu = document.querySelector('.menu-drawer');
-  const closeMenu = () => {
-    menuButton?.setAttribute('aria-expanded', 'false');
-    mobileMenu?.classList.remove('is-open');
-  };
-  menuButton?.addEventListener('click', () => {
-    const isOpen = menuButton.getAttribute('aria-expanded') === 'true';
-    menuButton.setAttribute('aria-expanded', String(!isOpen));
-    mobileMenu?.classList.toggle('is-open', !isOpen);
-  });
-  mobileMenu?.querySelectorAll('a').forEach((link) => link.addEventListener('click', closeMenu));
-
   const prepareEnquiry = (enquiryForm) => {
     const formStatus = enquiryForm.querySelector('.form-status');
     enquiryForm.addEventListener('submit', (event) => {
@@ -43,22 +16,15 @@
     });
   };
   document.querySelectorAll('#enquiry-form, .enquiry').forEach(prepareEnquiry);
-  const revealTargets = document.querySelectorAll('main > section:not(.hero):not(.index), .resource, .principle');
-
-  revealTargets.forEach((element) => element.classList.add('reveal'));
-
-  if ('IntersectionObserver' in window && !reducedMotion) {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('is-visible');
-          observer.unobserve(entry.target);
-        }
-      });
+  const cutaway = document.querySelector('.cutaway');
+  if (cutaway && !reducedMotion && 'IntersectionObserver' in window) {
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        cutaway.classList.add('is-visible');
+        observer.disconnect();
+      }
     }, { threshold: 0.12 });
-    revealTargets.forEach((element) => observer.observe(element));
-  } else {
-    revealTargets.forEach((element) => element.classList.add('is-visible'));
+    observer.observe(cutaway);
   }
 
   const hero = document.querySelector('.hero');
@@ -133,13 +99,25 @@
   const list = [['eps.html','Expanded Polystyrene'],['xps.html','Extruded polystyrene'],['epp.html','EPP components'],['eifs.html','EIFS systems'],['geofoam.html','EPS geofoam'],['profiles.html','Architectural profiles'],['packaging.html','Protective packaging']];
   const products = list.map(item => '<a href="' + root + 'products/' + item[0] + '">' + item[1] + '</a>').join('');
   const pendingHeader = document.querySelector('[data-header]');
-  if (pendingHeader) { pendingHeader.className = 'site-header'; pendingHeader.innerHTML = '<a class="brand" href="' + root + 'index.html"><img class="logo" src="' + root + 'alsharq-logo.svg" alt="Alsharq"><span class="brand-lockup"><b>Stayro Max</b><small>Material systems</small></span></a><nav class="nav" aria-label="Primary navigation"></nav><details class="mobile-menu"><summary aria-label="Open navigation">Menu</summary><nav class="mobile-drawer" aria-label="Mobile navigation"></nav></details>'; }
+  if (pendingHeader) { pendingHeader.className = 'site-header'; pendingHeader.innerHTML = '<a class="brand" href="' + root + 'index.html"><img class="logo" src="' + root + 'alsharq-logo.svg" alt="Alsharq"><span class="brand-lockup"><b>Stayro Max</b><small>Material systems</small></span></a><nav class="nav" aria-label="Primary navigation"></nav><details class="mobile-menu"><summary aria-label="Navigation menu">Menu</summary><nav class="mobile-drawer" aria-label="Mobile navigation"></nav></details>'; }
   const pendingFooter = document.querySelector('[data-footer]');
   if (pendingFooter) pendingFooter.innerHTML = '<div class="footer-top"><img class="footer-logo" src="' + root + 'alsharq-logo.svg" alt="Alsharq"><div class="footer-info"><div><b>CONTACT</b><a href="mailto:info@stayromax.com">info@stayromax.com</a><br><a href="tel:+966507624627">+966 50 762 4627</a></div><div><b>VISIT</b>Dammam, Eastern Province<br>Saudi Arabia</div></div></div><div class="legal"><span>© 2026 AL SHARQ · STAYRO MAX. ALL RIGHTS RESERVED.</span><span><a href="' + root + 'privacy.html">Privacy</a> · <a href="' + root + 'terms.html">Terms</a></span></div>';
   const nav = document.querySelector('.nav');
   if (nav) nav.innerHTML = '<details class="products-dropdown"><summary>Products</summary><div class="products-popover">' + products + '</div></details><a href="' + root + 'applications.html">Applications</a><a href="' + root + 'technical-library.html">Technical library</a><a href="' + root + 'about.html">About</a><a class="contact" href="' + root + 'contact.html">START A CONVERSATION ↗</a>';
   const mobile = document.querySelector('.mobile-drawer');
   if (mobile) mobile.innerHTML = '<a href="' + root + 'index.html">Home</a><a href="' + root + 'products.html">Products</a><div class="mobile-product-list">' + products + '</div><a href="' + root + 'applications.html">Applications</a><a href="' + root + 'technical-library.html">Technical library</a><a href="' + root + 'about.html">About</a><a href="' + root + 'contact.html">Start a conversation ↗</a><p class="menu-note">Stayro Max · A company of Alsharq</p>';
+  mobile?.addEventListener('click', (event) => {
+    const link = event.target.closest('a');
+    if (!link) return;
+    mobile.closest('details').open = false;
+    if (link.hash && link.pathname === location.pathname) {
+      const destination = document.getElementById(link.hash.slice(1));
+      if (destination) {
+        destination.tabIndex = -1;
+        destination.focus({ preventScroll: true });
+      }
+    }
+  });
   document.querySelectorAll('.index-list a').forEach((link, index) => { if (list[index]) link.href = root + 'products/' + list[index][0]; });
   document.querySelectorAll('.resource').forEach(link => link.href = root + 'technical-library.html');
   const legal = document.querySelector('.legal span:last-child'); if (legal) legal.innerHTML = '<a href="' + root + 'privacy.html">Privacy</a> · <a href="' + root + 'terms.html">Terms</a>';
